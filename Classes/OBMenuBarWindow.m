@@ -231,7 +231,22 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         // Create the status item
         _statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
         CGFloat thickness = [[NSStatusBar systemStatusBar] thickness];
-        self.statusItemView = [[OBMenuBarWindowIconView alloc] initWithFrame:NSMakeRect(0, 0, (self.menuBarIcon ? self.menuBarIcon.size.width : thickness) + 6, thickness)];
+
+        NSRect proportionallyScaledFrame = NSZeroRect;
+        proportionallyScaledFrame.size = self.menuBarIcon.size;
+
+        CGFloat scaleAmount = proportionallyScaledFrame.size.height / thickness;
+        proportionallyScaledFrame.size.width = round(proportionallyScaledFrame.size.width / scaleAmount) + 6;
+        proportionallyScaledFrame.size.height = round(proportionallyScaledFrame.size.height / scaleAmount);
+        // NSMakeRect(0, 0, (self.menuBarIcon ? self.menuBarIcon.size.width : thickness) + 6, thickness)];
+        
+        @try {
+            self.statusItemView = [[OBMenuBarWindowIconView alloc] initWithFrame:proportionallyScaledFrame];
+        }
+        @catch(NSException *ex) {
+            NSLog(@"Caught exception: %@", ex);
+        }
+        
         self.statusItemView.menuBarWindow = self;
         _statusItem.view = self.statusItemView;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(statusItemViewDidMove:) name:NSWindowDidMoveNotification object:_statusItem.view.window];
